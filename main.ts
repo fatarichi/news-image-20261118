@@ -1,11 +1,20 @@
-// A working news-image-daily entry (Node 22, standard library only): its image is the entry.png beside this file, and
-// the program copies it to /output/entry.png. A starting point, not a winner: replace the image. The gate takes a
-// whole PNG or JPEG of at most 1 MiB and 1024 by 1024 pixels, and the judge sees exactly the bytes copied.
-//
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// News-image entry: the front page is already finished as entry.png, so this
+// program only carries that file into the grader's output folder. It draws
+// nothing at run time, which keeps both runs byte for byte identical.
+import * as fs from "node:fs";
+import * as path from "node:path";
 
-import { copyFileSync } from 'node:fs';
-import { join } from 'node:path';
+const folder = import.meta.dirname;
+const source = path.join(folder, "entry.png");
+const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+const target = path.join(outDir, "entry.png");
 
-copyFileSync(new URL('./entry.png', import.meta.url), join(process.env.MAKEFUN_OUTPUT_DIR ?? '/output', 'entry.png'));
+fs.mkdirSync(outDir, { recursive: true });
+fs.copyFileSync(source, target);
+
+// Double-check the copy landed whole before the run ends.
+if (fs.statSync(target).size !== fs.statSync(source).size) {
+  throw new Error("entry.png copy is incomplete");
+}
+const bytes = fs.statSync(target).size;
+console.log(`entry.png written (${bytes} bytes)`);
